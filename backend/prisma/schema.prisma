@@ -28,14 +28,15 @@ model User {
 }
 
 model Store {
-  id        String    @id @default(uuid())
-  name      String    @db.VarChar(60)
-  address   String    @db.VarChar(400)
-  ownerId   String    @unique
-  owner     User      @relation(fields: [ownerId], references: [id])
-  ratings   Rating[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(60)
+  address     String    @db.VarChar(400)
+  contactEmail String   
+  ownerId     String    @unique
+  owner       User      @relation(fields: [ownerId], references: [id])
+  ratings     Rating[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Rating {

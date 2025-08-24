@@ -15,6 +15,6 @@ router.post('/login', validateLogin, authController.login);
 
 // Protected routes
 router.get('/me', authenticateToken, authController.getCurrentUser);
-router.put('/password', authenticateToken, validatePasswordUpdate, authController.updatePassword);
+router.patch('/password', authenticateToken, validatePasswordUpdate, authController.updatePassword);
 
 export default router;

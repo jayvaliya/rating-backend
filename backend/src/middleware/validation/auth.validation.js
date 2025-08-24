@@ -8,9 +8,6 @@ import {
 const validateRequest = (schema) => {
   return (req, res, next) => {
     try {
-      // Log the incoming request body for debugging
-      console.log('Validating request body:', req.body);
-      
       // Validate request body against schema
       schema.parse(req.body);
       next();

@@ -8,10 +8,10 @@ import { z } from 'zod';
 // ID validation (UUID format)
 const idSchema = z.string().uuid({ message: 'Invalid ID format' }).optional();
 
-// Name validation (3-60 characters)
+// Name validation (3-20 characters)
 const nameSchema = z.string()
   .min(3, { message: 'Name must be at least 3 characters' })
-  .max(60, { message: 'Name cannot exceed 60 characters' });
+  .max(20, { message: 'Name cannot exceed 20 characters' });
 
 // Email validation
 const emailSchema = z.string()
@@ -79,6 +79,34 @@ const ratingSchema = z.object({
   updatedAt: z.date().optional()
 });
 
+// Admin Schemas
+// -----------------
+
+// User creation schema for admin
+const createUserSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  address: addressSchema,
+  role: roleEnum.optional()
+});
+
+// Store creation schema for admin
+const createStoreSchema = z.object({
+  name: nameSchema,
+  address: addressSchema,
+  contactEmail: emailSchema,
+  ownerId: z.string().uuid({ message: 'Invalid user ID format' })
+});
+
+// Update user role schema
+const updateUserRoleSchema = z.object({
+  role: roleEnum
+});
+
+
+
+
 // Operation Schemas
 // -----------------
 
@@ -116,7 +144,10 @@ export {
   ratingSchema,
   registerSchema,
   loginSchema,
-  passwordUpdateSchema
+  passwordUpdateSchema,
+  updateUserRoleSchema,
+  createStoreSchema,
+  createUserSchema
 };
 
 // Export default for compatibility
@@ -133,5 +164,9 @@ export default {
   ratingSchema,
   registerSchema,
   loginSchema,
-  passwordUpdateSchema
+  passwordUpdateSchema,
+  updateUserRoleSchema,
+  createStoreSchema,
+  createUserSchema
 };
+
