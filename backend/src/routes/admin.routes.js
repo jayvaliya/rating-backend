@@ -1,13 +1,13 @@
 import express from 'express';
 import * as adminController from '../controllers/admin.controller.js';
-import { authenticateToken } from '../middleware/auth.middleware.js';
+import { verifyToken } from '../middleware/auth.middleware.js';
 import { isAdmin } from '../middleware/role.middleware.js';
 import { validateCreateUser, validateUpdateUserRole } from '../middleware/validation/admin.validation.js';
 
 const router = express.Router();
 
 // Apply authentication and admin role check to all routes
-router.use(authenticateToken);
+router.use(verifyToken);
 router.use(isAdmin);
 
 // Dashboard statistics

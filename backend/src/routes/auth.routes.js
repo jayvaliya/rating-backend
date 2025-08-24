@@ -1,7 +1,7 @@
 import express from 'express';
 import * as authController from '../controllers/auth.controller.js';
-import { authenticateToken } from '../middleware/auth.middleware.js';
-import { 
+import { verifyToken } from '../middleware/auth.middleware.js';
+import {
   validateRegistration, 
   validateLogin, 
   validatePasswordUpdate 
@@ -14,7 +14,7 @@ router.post('/register', validateRegistration, authController.register);
 router.post('/login', validateLogin, authController.login);
 
 // Protected routes
-router.get('/me', authenticateToken, authController.getCurrentUser);
-router.patch('/password', authenticateToken, validatePasswordUpdate, authController.updatePassword);
+router.get('/me', verifyToken, authController.getCurrentUser);
+router.patch('/password', verifyToken, validatePasswordUpdate, authController.updatePassword);
 
 export default router;

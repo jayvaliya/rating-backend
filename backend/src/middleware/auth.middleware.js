@@ -5,7 +5,7 @@ import prisma from '../utils/prisma.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Middleware to authenticate JWT token
-const authenticateToken = async (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   // Get the token from the Authorization header
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN format
@@ -62,6 +62,6 @@ const authorize = (roles = []) => {
 };
 
 export {
-  authenticateToken,
+  verifyToken,
   authorize
 };
