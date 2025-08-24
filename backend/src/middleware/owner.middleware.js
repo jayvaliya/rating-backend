@@ -2,7 +2,7 @@ import prisma from '../utils/prisma.js';
 
 /**
  * Middleware to verify user is a store owner
- * This checks if the authenticated user has the 'owner' role
+ * This checks if the authenticated user has the 'OWNER' role
  */
 export const verifyOwner = async (req, res, next) => {
   try {

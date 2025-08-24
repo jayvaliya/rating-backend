@@ -42,6 +42,7 @@ model Store {
 model Rating {
   id        String    @id @default(uuid())
   value     Int       @db.SmallInt
+  comment   String?   @db.VarChar(500)
   userId    String
   user      User      @relation(fields: [userId], references: [id])
   storeId   String

@@ -99,6 +99,32 @@ const createStoreSchema = z.object({
   ownerId: z.string().uuid({ message: 'Invalid user ID format' })
 });
 
+// User Schemas
+// -----------------
+
+// Profile update schema for users
+const profileUpdateSchema = z.object({
+  name: nameSchema.optional(),
+  address: addressSchema.optional(),
+  email: emailSchema.optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update"
+});
+
+// Rating creation schema
+const ratingCreateSchema = z.object({
+  value: scoreSchema,
+  comment: z.string().max(500, { message: 'Comment cannot exceed 500 characters' }).optional()
+});
+
+// Rating update schema
+const ratingUpdateSchema = z.object({
+  value: scoreSchema.optional(),
+  comment: z.string().max(500, { message: 'Comment cannot exceed 500 characters' }).optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update"
+});
+
 // Update user role schema
 const updateUserRoleSchema = z.object({
   role: roleEnum
@@ -147,7 +173,10 @@ export {
   passwordUpdateSchema,
   updateUserRoleSchema,
   createStoreSchema,
-  createUserSchema
+  createUserSchema,
+  profileUpdateSchema,
+  ratingCreateSchema,
+  ratingUpdateSchema
 };
 
 // Export default for compatibility
@@ -167,6 +196,9 @@ export default {
   passwordUpdateSchema,
   updateUserRoleSchema,
   createStoreSchema,
-  createUserSchema
+  createUserSchema,
+  profileUpdateSchema,
+  ratingCreateSchema,
+  ratingUpdateSchema
 };
 
