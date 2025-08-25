@@ -38,7 +38,7 @@ export const getAllUsers = async (req, res) => {
     if (name) filter.name = { contains: name, mode: 'insensitive' };
     if (email) filter.email = { contains: email, mode: 'insensitive' };
     if (address) filter.address = { contains: address, mode: 'insensitive' };
-    if (role && (role === 'USER' || role === 'OWNER')) filter.role = role; // Only allow filtering by USER or OWNER
+    if (role && (role === 'USER' || role === 'ADMIN')) filter.role = role;
     
     // Get users based on filters
     const users = await prisma.user.findMany({
@@ -471,14 +471,14 @@ export const createStoreWithOwner = async (req, res) => {
     const result = await prisma.$transaction(async (tx) => {
       // Hash the password
       const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(owner.password, saltRounds);
+      const hashedPassword = await bcrypt.hash(owner.password, saltRounds);
       
       // Create the owner with OWNER role
       const newOwner = await tx.user.create({
         data: {
           name: owner.name,
           email: owner.email,
-          passwordHash,
+          password: hashedPassword,
           address: owner.address,
           role: 'OWNER'
         },
