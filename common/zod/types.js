@@ -125,12 +125,6 @@ const ratingUpdateSchema = z.object({
   message: "At least one field must be provided for update"
 });
 
-// Update user role schema
-const updateUserRoleSchema = z.object({
-  role: roleEnum
-});
-
-
 
 
 // Operation Schemas
@@ -171,7 +165,6 @@ export {
   registerSchema,
   loginSchema,
   passwordUpdateSchema,
-  updateUserRoleSchema,
   createStoreSchema,
   createUserSchema,
   profileUpdateSchema,
@@ -194,7 +187,6 @@ export default {
   registerSchema,
   loginSchema,
   passwordUpdateSchema,
-  updateUserRoleSchema,
   createStoreSchema,
   createUserSchema,
   profileUpdateSchema,

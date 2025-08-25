@@ -2,7 +2,7 @@ import express from 'express';
 import * as adminController from '../controllers/admin.controller.js';
 import { verifyToken } from '../middleware/auth.middleware.js';
 import { isAdmin } from '../middleware/role.middleware.js';
-import { validateCreateUser, validateUpdateUserRole } from '../middleware/validation/admin.validation.js';
+import { validateCreateUser } from '../middleware/validation/admin.validation.js';
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.get('/dashboard', adminController.getAdminStats);
 router.get('/users', adminController.getAllUsers);
 router.post('/users', validateCreateUser, adminController.createUser);
 router.get('/users/:id', adminController.getUserById);
-router.patch('/users/:id/role', validateUpdateUserRole, adminController.updateUserRole);
+// router.patch('/users/:id/role', validateUpdateUserRole, adminController.updateUserRole);
 router.delete('/users/:id', adminController.deleteUser);
 
 // Store management

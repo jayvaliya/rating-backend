@@ -1,5 +1,4 @@
 import {
-  updateUserRoleSchema,
   createStoreSchema,
   createUserSchema
 } from '../../../../common/zod/types.js';
@@ -36,4 +35,3 @@ const validateRequest = (schema) => {
 // Validation middleware
 export const validateCreateUser = validateRequest(createUserSchema);
 export const validateCreateStore = validateRequest(createStoreSchema);
-export const validateUpdateUserRole = validateRequest(updateUserRoleSchema);
