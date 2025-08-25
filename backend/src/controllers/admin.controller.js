@@ -31,11 +31,14 @@ export const getAllUsers = async (req, res) => {
     const { name, email, address, role, sort, order } = req.query;
     
     // Build filter object based on provided query parameters
-    const filter = {};
+    const filter = {
+      // Exclude admin users, only show USER and OWNER roles
+      role: { in: ['USER', 'OWNER'] }
+    };
     if (name) filter.name = { contains: name, mode: 'insensitive' };
     if (email) filter.email = { contains: email, mode: 'insensitive' };
     if (address) filter.address = { contains: address, mode: 'insensitive' };
-    if (role) filter.role = role;
+    if (role && (role === 'USER' || role === 'OWNER')) filter.role = role; // Only allow filtering by USER or OWNER
     
     // Get users based on filters
     const users = await prisma.user.findMany({
@@ -230,10 +233,6 @@ export const deleteUser = async (req, res) => {
 };
 
 /**
- * Store management functions
- */
-
-/**
  * Get all stores with filters and sorting
  */
 export const getAllStores = async (req, res) => {
@@ -304,67 +303,6 @@ export const getAllStores = async (req, res) => {
   } catch (error) {
     console.error('Error getting stores:', error);
     res.status(500).json({ message: 'Failed to fetch stores' });
-  }
-};
-
-/**
- * Create a new store
- */
-export const createStore = async (req, res) => {
-  try {
-    const { name, address, contactEmail, ownerId } = req.body;
-    
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: ownerId }
-    });
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Check if user is already associated with a store
-    const existingStore = await prisma.store.findUnique({
-      where: { ownerId }
-    });
-    
-    if (existingStore) {
-      return res.status(400).json({ 
-        message: 'This user is already a store owner. One user can only own one store.'
-      });
-    }
-    
-    // Create the store
-    const store = await prisma.store.create({
-      data: {
-        name,
-        address,
-        contactEmail,
-        ownerId
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    });
-    
-    // Update user role to OWNER if not already
-    if (user.role !== 'OWNER') {
-      await prisma.user.update({
-        where: { id: ownerId },
-        data: { role: 'OWNER' }
-      });
-    }
-    
-    res.status(201).json(store);
-  } catch (error) {
-    console.error('Error creating store:', error);
-    res.status(500).json({ message: 'Failed to create store' });
   }
 };
 
@@ -509,5 +447,138 @@ export const deleteStore = async (req, res) => {
   } catch (error) {
     console.error('Error deleting store:', error);
     res.status(500).json({ message: 'Failed to delete store' });
+  }
+};
+
+/**
+ * Create a store with an owner in a single operation
+ * Creates a new user with OWNER role and associates it with a new store
+ */
+export const createStoreWithOwner = async (req, res) => {
+  try {
+    const { store, owner } = req.body;
+    
+    // Check if user with this email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: owner.email }
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+    
+    // Using transaction to ensure both operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // Hash the password
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(owner.password, saltRounds);
+      
+      // Create the owner with OWNER role
+      const newOwner = await tx.user.create({
+        data: {
+          name: owner.name,
+          email: owner.email,
+          passwordHash,
+          address: owner.address,
+          role: 'OWNER'
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          address: true,
+          createdAt: true
+        }
+      });
+      
+      // Create the store and link it to the owner
+      const newStore = await tx.store.create({
+        data: {
+          name: store.name,
+          address: store.address,
+          contactEmail: store.contactEmail,
+          ownerId: newOwner.id
+        },
+        select: {
+          id: true,
+          name: true,
+          contactEmail: true,
+          address: true,
+          createdAt: true
+        }
+      });
+      
+      return { owner: newOwner, store: newStore };
+    });
+    
+    res.status(201).json({
+      message: 'Store and owner created successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error creating store with owner:', error);
+    res.status(500).json({ message: 'Failed to create store with owner' });
+  }
+};
+
+/**
+ * Update a user's details
+ * Admin can update name, email, address, and role
+ */
+export const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { name, email, address, role } = req.body;
+    
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // If email is being changed, check if the new email is already in use
+    if (email && email !== user.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+      
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already in use by another user' });
+      }
+    }
+    
+    // Prepare update data
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (address) updateData.address = address;
+    if (role) updateData.role = role;
+    
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    
+    res.json({
+      message: 'User updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: 'Failed to update user' });
   }
 };

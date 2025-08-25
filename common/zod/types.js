@@ -111,6 +111,16 @@ const profileUpdateSchema = z.object({
   message: "At least one field must be provided for update"
 });
 
+// Admin user update schema (more permissive than regular profile update)
+const adminUserUpdateSchema = z.object({
+  name: nameSchema.optional(),
+  address: addressSchema.optional(),
+  email: emailSchema.optional(),
+  role: roleEnum.optional(),
+}).refine(data => Object.keys(data).length > 0, {
+  message: "At least one field must be provided for update"
+});
+
 // Rating creation schema
 const ratingCreateSchema = z.object({
   value: scoreSchema,
@@ -125,7 +135,20 @@ const ratingUpdateSchema = z.object({
   message: "At least one field must be provided for update"
 });
 
-
+// Store with owner creation schema for admin
+const createStoreWithOwnerSchema = z.object({
+  store: z.object({
+    name: nameSchema,
+    address: addressSchema,
+    contactEmail: emailSchema,
+  }),
+  owner: z.object({
+    name: nameSchema,
+    email: emailSchema,
+    password: passwordSchema,
+    address: addressSchema,
+  })
+});
 
 // Operation Schemas
 // -----------------
@@ -168,8 +191,10 @@ export {
   createStoreSchema,
   createUserSchema,
   profileUpdateSchema,
+  adminUserUpdateSchema,
   ratingCreateSchema,
-  ratingUpdateSchema
+  ratingUpdateSchema,
+  createStoreWithOwnerSchema
 };
 
 // Export default for compatibility
@@ -190,7 +215,9 @@ export default {
   createStoreSchema,
   createUserSchema,
   profileUpdateSchema,
+  adminUserUpdateSchema,
   ratingCreateSchema,
-  ratingUpdateSchema
+  ratingUpdateSchema,
+  createStoreWithOwnerSchema
 };
 

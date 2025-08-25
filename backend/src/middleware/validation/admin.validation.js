@@ -1,6 +1,7 @@
 import {
-  createStoreSchema,
-  createUserSchema
+  createUserSchema,
+  createStoreWithOwnerSchema,
+  adminUserUpdateSchema
 } from '../../../../common/zod/types.js';
 
 // Middleware factory for validating requests using Zod schemas
@@ -34,4 +35,5 @@ const validateRequest = (schema) => {
 
 // Validation middleware
 export const validateCreateUser = validateRequest(createUserSchema);
-export const validateCreateStore = validateRequest(createStoreSchema);
+export const validateCreateStoreWithOwner = validateRequest(createStoreWithOwnerSchema);
+export const validateUpdateUser = validateRequest(adminUserUpdateSchema);
