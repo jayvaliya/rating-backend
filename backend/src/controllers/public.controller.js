@@ -73,9 +73,7 @@ export const getPublicStores = async (req, res) => {
           }
         }
       },
-      orderBy,
-      skip,
-      take: limitNum
+      orderBy
     });
 
     // Calculate average rating for each store
@@ -121,13 +119,20 @@ export const getPublicStores = async (req, res) => {
 
     // Calculate total pages based on filtered results
     const filteredCount = sortedStores.length;
-    const totalPages = Math.ceil(filteredCount / limitNum);
+    
+    // Apply pagination to the sorted and filtered results
+    const paginatedStores = sortedStores.slice(skip, skip + limitNum);
+    
+    // Calculate total pages based on the actual total count BEFORE filtering/sorting
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     res.json({
-      totalCount: filteredCount,
+      totalCount: totalCount, // Send the actual total count from the database
+      filteredCount: filteredCount, // Also send the filtered count for reference
+      count: paginatedStores.length,
       page: pageNum,
       totalPages,
-      stores: sortedStores,
+      stores: paginatedStores,
       filters: {
         applied: {
           minRating: minRating ? Number(minRating) : undefined,
