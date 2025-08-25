@@ -6,16 +6,53 @@ import bcrypt from 'bcrypt';
  */
 export const getAdminStats = async (req, res) => {
   try {
-    const [userCount, storeCount, ratingCount] = await Promise.all([
+    const [userCount, storeCount, ratingCount, recentUsers, recentStores] = await Promise.all([
       prisma.user.count(),
       prisma.store.count(),
-      prisma.rating.count()
+      prisma.rating.count(),
+      // Get last 5 users
+      prisma.user.findMany({
+        take: 5,
+        where: { role: { in: ['USER', 'ADMIN'] } },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          address: true,
+          createdAt: true
+        }
+      }),
+      // Get last 5 stores
+      prisma.store.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          contactEmail: true,
+          createdAt: true,
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      })
     ]);
     
     res.json({
-      users: userCount,
-      stores: storeCount,
-      ratings: ratingCount
+      stats: {
+        users: userCount,
+        stores: storeCount,
+        ratings: ratingCount
+      },
+      recentUsers,
+      recentStores
     });
   } catch (error) {
     console.error('Error getting admin stats:', error);
@@ -32,14 +69,13 @@ export const getAllUsers = async (req, res) => {
     
     // Build filter object based on provided query parameters
     const filter = {
-      // Exclude admin users, only show USER and OWNER roles
-      role: { in: ['USER', 'OWNER'] }
+      role: { in: ['USER', 'ADMIN'] }
     };
     if (name) filter.name = { contains: name, mode: 'insensitive' };
     if (email) filter.email = { contains: email, mode: 'insensitive' };
     if (address) filter.address = { contains: address, mode: 'insensitive' };
     if (role && (role === 'USER' || role === 'ADMIN')) filter.role = role;
-    
+
     // Get users based on filters
     const users = await prisma.user.findMany({
       where: filter,

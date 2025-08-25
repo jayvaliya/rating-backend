@@ -26,7 +26,7 @@ router.get('/stores/:id', adminController.getStoreById);
 router.patch('/stores/:id', adminController.updateStore);
 router.delete('/stores/:id', adminController.deleteStore);
 
-// Store with owner creation
+// Create Store with owner
 router.post('/stores', validateCreateStoreWithOwner, adminController.createStoreWithOwner);
 
 export default router;
