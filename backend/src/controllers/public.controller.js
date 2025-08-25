@@ -243,3 +243,68 @@ export const getPublicStoreById = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch store details' });
   }
 };
+
+/**
+ * Get a user's rating for a specific store
+ * Uses token for authentication and store ID from request body
+ */
+export const getUserStoreRating = async (req, res) => {
+  try {
+    // Get store ID from request body
+    const { storeId } = req.params;
+    
+    if (!storeId) {
+      return res.status(400).json({ message: 'Store ID is required' });
+    }
+    
+    const userId = req.user.id;
+    
+    console.log(`Looking for rating with storeId: ${storeId}, userId: ${userId}`);
+    
+    // First, check if the store exists
+    const store = await prisma.store.findUnique({
+      where: { id: storeId },
+    });
+    
+    if (!store) {
+      return res.status(404).json({ 
+        message: 'Store not found',
+        storeId: storeId
+      });
+    }
+    
+    // Then, find the user's rating for this store
+    const rating = await prisma.rating.findFirst({
+      where: {
+        storeId: storeId,
+        userId: userId
+      },
+      select: {
+        id: true,
+        value: true,
+        comment: true,
+        createdAt: true,
+        updatedAt: true,
+        store: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+    
+    if (!rating) {
+      return res.status(404).json({
+        message: 'No rating found for this user and store',
+        storeId,
+        userId
+      });
+    }
+    
+    return res.status(200).json(rating);
+  } catch (error) {
+    console.error('Error fetching user rating:', error);
+    return res.status(500).json({ message: 'Failed to fetch rating', error: error.message });
+  }
+};
