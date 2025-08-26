@@ -1,6 +1,5 @@
 import prisma from '../utils/prisma.js';
 import { 
-  profileUpdateSchema, 
   ratingCreateSchema, 
   ratingUpdateSchema 
 } from '../../../common/zod/types.js';
@@ -24,36 +23,6 @@ export const verifyUser = async (req, res, next) => {
   } catch (error) {
     console.error('Error in user verification middleware:', error);
     res.status(500).json({ message: 'Internal server error during authorization' });
-  }
-};
-
-/**
- * Middleware to validate profile update requests
- */
-export const validateProfileUpdate = (req, res, next) => {
-  try {
-    const validatedData = profileUpdateSchema.safeParse(req.body);
-    
-    if (!validatedData.success) {
-      // Format Zod errors into a more user-friendly format
-      const formattedErrors = validatedData.error.errors.reduce((acc, error) => {
-        const path = error.path.join('.');
-        acc[path] = error.message;
-        return acc;
-      }, {});
-      
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: formattedErrors
-      });
-    }
-    
-    // Attach validated data to request
-    req.validatedData = validatedData.data;
-    next();
-  } catch (error) {
-    console.error('Error in profile validation middleware:', error);
-    res.status(500).json({ message: 'Error validating request' });
   }
 };
 

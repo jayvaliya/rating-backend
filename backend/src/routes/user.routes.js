@@ -2,16 +2,12 @@ import express from 'express';
 import { verifyToken } from '../middleware/auth.middleware.js';
 import { 
   verifyUser,
-  validateProfileUpdate,
   validateRatingCreate,
   validateRatingUpdate,
   canModifyRating
 } from '../middleware/user.middleware.js';
 import {
-  getUserProfile,
-  updateUserProfile,
   getUserActivity,
-  getStoreById,
   createRating,
   getUserRatings,
   getRatingById,
@@ -25,9 +21,7 @@ const router = express.Router();
 router.use(verifyToken);
 router.use(verifyUser);
 
-// Profile routes
-router.get('/profile', getUserProfile);
-router.patch('/profile', validateProfileUpdate, updateUserProfile);
+// User activity routes
 router.get('/activity', getUserActivity);
 
 // Rating management routes

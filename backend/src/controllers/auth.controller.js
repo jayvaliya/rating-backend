@@ -146,9 +146,137 @@ const updatePassword = async (req, res) => {
   }
 };
 
+// Get detailed user profile with stats
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user with selected fields
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            ratings: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get average rating the user has given
+    const ratings = await prisma.rating.findMany({
+      where: { userId: userId },
+      select: { value: true }
+    });
+
+    const totalRatings = ratings.length;
+    const averageRating = totalRatings > 0 
+      ? parseFloat((ratings.reduce((sum, r) => sum + r.value, 0) / totalRatings).toFixed(1)) 
+      : 0;
+
+    // Get recent ratings
+    const recentRatings = await prisma.rating.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        id: true,
+        value: true,
+        comment: true,
+        createdAt: true,
+        store: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    // Format response
+    const response = {
+      ...user,
+      ratingStats: {
+        count: user._count.ratings,
+        averageRating
+      },
+      recentRatings
+    };
+
+    // Remove _count from response
+    delete response._count;
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Server error fetching user profile', error: error.message });
+  }
+};
+
+// Update user profile
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, address } = req.body;
+
+    // Create update object with only provided fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (address !== undefined) updateData.address = address;
+
+    // If email is being updated, check if it's already in use
+    if (email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ message: 'Email is already in use' });
+      }
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        address: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    res.json({ 
+      message: 'Profile updated successfully', 
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ message: 'Failed to update user profile' });
+  }
+};
+
 export {
   register,
   login,
   getCurrentUser,
-  updatePassword
+  updatePassword,
+  getUserProfile,
+  updateUserProfile
 };
